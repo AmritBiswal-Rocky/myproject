@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Firebase ID Token Generator</title>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  </head>
+  <body>
+    <h2>🟢 Firebase ID Token Generator</h2>
+    <button id="loginBtn">Login with Google</button>
+    <pre id="output"></pre>
+
+    <script>
+      // Your Firebase config
+      const firebaseConfig = {
+        apiKey: 'AIzaSyAxFm-MWgNsd_LaQ_tvKCgL5JFVVZbhIew',
+        authDomain: 'ai-calender-95194.firebaseapp.com',
+        projectId: 'ai-calender-95194',
+        storageBucket: 'ai-calender-95194.appspot.com',
+        messagingSenderId: '34331058415',
+        appId: '1:34331058415:web:48456f38f9ad6d6e9b7b1a',
+        measurementId: 'G-F3G5C9E7FJ',
+      };
+
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+
+      // Login and Get ID Token
+      document.getElementById('loginBtn').addEventListener('click', async () => {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        try {
+          const result = await firebase.auth().signInWithPopup(provider);
+          const token = await result.user.getIdToken();
+          document.getElementById('output').textContent = `✅ ID Token:\n\n${token}`;
+          console.log('ID Token:', token);
+        } catch (error) {
+          document.getElementById('output').textContent = `❌ Error:\n\n${error.message}`;
+          console.error('Login Error:', error);
+        }
+      });
+    </script>
+  </body>
+</html>
