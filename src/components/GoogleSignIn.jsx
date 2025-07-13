@@ -1,14 +1,15 @@
+// src/components/GoogleSignIn.jsx
 import React from 'react';
-import { signInWithGoogle } from '../firebase'; // Importing the function from firebase.js
+import { signInWithGoogle } from '../firebaseClient';
 
 const GoogleSignIn = () => {
   const handleSignIn = async () => {
     try {
-      const user = await signInWithGoogle(); // Using the function from firebase.js
-      console.log('Signed in as:', user.displayName);
+      const user = await signInWithGoogle();
+      console.log('✅ Signed in as:', user.displayName);
       alert(`Signed in as ${user.displayName}`);
     } catch (error) {
-      console.error('Google Sign-In Error:', error);
+      console.error('❌ Google Sign‑In Error:', error);
     }
   };
 

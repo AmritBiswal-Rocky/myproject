@@ -1,12 +1,17 @@
-// src/components/PrivateRoute.js
+// src/components/PrivateRoute.jsx
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Navigate } from 'react-router-dom';
 
+/**
+ * Wrap protected routes so only authenticated users can see them.
+ * user === undefined  → auth check still loading (render nothing / spinner).
+ * user === null       → not logged in (redirect to /profile).
+ * user is truthy      → render children.
+ */
 const PrivateRoute = ({ user, children }) => {
   if (user === undefined) {
-    // Optionally show a loading spinner or nothing while auth is being checked
-    return null;
+    return null; // or a loader while checking auth
   }
   if (!user) {
     return <Navigate to="/profile" replace />;
@@ -14,7 +19,6 @@ const PrivateRoute = ({ user, children }) => {
   return children;
 };
 
-// ✅ PropTypes validation
 PrivateRoute.propTypes = {
   user: PropTypes.object,
   children: PropTypes.node.isRequired,

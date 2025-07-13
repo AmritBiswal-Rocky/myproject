@@ -1,10 +1,10 @@
 // src/App.js
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import CalendarTasks from './CalendarTasks';
 import PredictionComponent from './components/PredictionComponent';
-import ProfileCard from './ProfileCard';
+import ProfileCard from './components/ProfileCard';
 import { Toaster } from 'react-hot-toast';
 import './App.css';
 import ProfileTab from './components/ProfileTab';
@@ -14,7 +14,9 @@ import ProfileSection from './components/ProfileSection';
 import { useAuth } from './hooks/useAuth';
 import { supabase } from './supabaseClient';
 import { connectSocket } from './socket';
-import FirebaseTokenTool from './components/FirebaseTokenTool'; // 👈 NEW
+import FirebaseTokenTool from './components/FirebaseTokenTool';
+import CalendarView from './components/CalendarView';
+import Sidebar from './components/Sidebar';
 
 // ✅ Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -50,32 +52,47 @@ ErrorBoundary.propTypes = {
 
 function App() {
   const { user } = useAuth();
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // 🔌 Connect WebSocket
+  // ✅ Fetch tasks from Supabase
+  const fetchUserTasks = async () => {
+    if (user) {
+      try {
+        const { data, error } = await supabase.from('tasks').select('*').eq('user_id', user.uid);
+
+        if (error) {
+          console.error('❌ Supabase fetch error:', error.message);
+        } else {
+          setTasks(data);
+          console.log('✅ Fetched tasks:', data);
+        }
+      } catch (err) {
+        console.error('❌ Unexpected fetch error:', err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  // 🔌 Connect WebSocket and listen for task updates
   useEffect(() => {
     const socket = connectSocket();
-    const onTaskUpdate = () => {
+
+    const handleTaskUpdate = () => {
       console.log('📬 Received "task_update" from server');
+      fetchUserTasks(); // 🔄 Refresh tasks when notified
     };
 
-    socket.on('task_update', onTaskUpdate);
-    return () => socket.off('task_update', onTaskUpdate);
-  }, []);
+    socket.on('task_update', handleTaskUpdate);
 
-  // 🧠 Fetch user tasks after login
+    return () => {
+      socket.off('task_update', handleTaskUpdate);
+    };
+  }, [user]);
+
+  // 🔃 Initial task fetch on login
   useEffect(() => {
-    const fetchUserTasks = async () => {
-      if (user) {
-        try {
-          const { data, error } = await supabase.from('tasks').select('*').eq('user_id', user.uid);
-          if (error) console.error('❌ Supabase fetch error:', error.message);
-          else console.log('✅ Fetched tasks:', data);
-        } catch (err) {
-          console.error('❌ Unexpected fetch error:', err.message);
-        }
-      }
-    };
-
     fetchUserTasks();
   }, [user]);
 
@@ -83,6 +100,7 @@ function App() {
     <ErrorBoundary>
       <ThemeToggle />
       <Toaster position="top-right" />
+      <Sidebar />
 
       <Routes>
         {/* 🌐 Public Routes */}
@@ -94,7 +112,15 @@ function App() {
           path="/"
           element={
             <PrivateRoute user={user}>
-              <CalendarTasks />
+              <CalendarTasks tasks={tasks} loading={loading} fetchTasks={fetchUserTasks} />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/calendar-view"
+          element={
+            <PrivateRoute user={user}>
+              <CalendarView />
             </PrivateRoute>
           }
         />
@@ -115,16 +141,20 @@ function App() {
           }
         />
 
-        {/* 🔐 Firebase ID Token Tool (for manual token testing) */}
+        {/* 🔧 Firebase Token Tool */}
         <Route path="/get-id-token" element={<FirebaseTokenTool />} />
 
-        {/* 🐞 Debug */}
+        {/* 🐞 Debug Route */}
         <Route
           path="/debug"
-          element={<div className="p-4">Current user: {JSON.stringify(user)}</div>}
+          element={
+            <div className="p-4">
+              <pre>{JSON.stringify(user, null, 2)}</pre>
+            </div>
+          }
         />
 
-        {/* 🛑 Fallback */}
+        {/* 🛑 Catch-all Route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </ErrorBoundary>

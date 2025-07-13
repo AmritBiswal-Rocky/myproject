@@ -1,7 +1,9 @@
+// src/components/ProfileSection.jsx
 import React, { useEffect, useState } from 'react';
 import { fetchUserProfile } from '../api/profile';
 import { getAuth } from 'firebase/auth';
 import toast from 'react-hot-toast';
+import ProfileCard from './ProfileCard';
 
 const ProfileSection = () => {
   const [profile, setProfile] = useState(null);
@@ -28,17 +30,10 @@ const ProfileSection = () => {
     loadProfile();
   }, []);
 
-  if (loading) return <p>Loading profile...</p>;
-
   return (
     <div className="p-4 rounded-lg bg-white shadow">
-      <h2 className="text-lg font-semibold">Profile</h2>
-      <p>
-        <strong>Full Name:</strong> {profile?.fullName || 'N/A'}
-      </p>
-      <p>
-        <strong>Joined:</strong> {profile?.joinDate || 'N/A'}
-      </p>
+      <h2 className="text-lg font-semibold mb-4">Profile</h2>
+      <ProfileCard profile={profile} loading={loading} />
     </div>
   );
 };

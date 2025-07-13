@@ -1,3 +1,5 @@
+// src/supabaseClient.js
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = 'https://oftitgyftywcpojqhyue.supabase.co';
@@ -13,7 +15,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export async function setSupabaseSession(firebaseToken) {
   const { error } = await supabase.auth.setSession({
     access_token: firebaseToken,
-    refresh_token: firebaseToken, // Firebase doesn't return refresh_token, but Supabase requires both
+    refresh_token: firebaseToken, // Firebase doesn't provide refresh_token, just reusing
   });
 
   if (error) {
@@ -42,7 +44,7 @@ export async function syncFirebaseUserToSupabase(firebaseUser) {
       full_name: displayName,
       avatar_url: photoURL,
     },
-    { onConflict: ['id'] }
+    { onConflict: ['id'] } // Ensure id is unique
   );
 
   if (error) {
